@@ -13,3 +13,4 @@ AlignOperands: Align
 AlwaysBreakAfterReturnType: AllDefinitions
 AllowShortFunctionsOnASingleLine: None
 PointerAlignment: Left
+SortIncludes: false

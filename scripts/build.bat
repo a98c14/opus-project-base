@@ -10,6 +10,7 @@ if "%release%"=="1" set debug=0 && echo [release mode]
 if "%~1"==""                     echo [default mode, assuming `main` build] && set main=1
 if "%~1"=="release" if "%~2"=="" echo [default mode, assuming `main` build] && set main=1
 
+
 :: --- Unpack Command Line Build Arguments ------------------------------------
 set auto_compile_flags=
 
@@ -37,6 +38,13 @@ if not exist dist mkdir dist
 pushd dist
 if "%main%"=="1" set didbuild=1 && %compile% ..\src\main.c %compile_link% %out%main.exe || exit /b 1
 popd
+if %didbuild%==1 echo [build succeeded]
+
+pushd dist
+:: TODO: replace main with build target name
+if "%run%"=="1" echo [running main.exe] && call main.exe
+popd
+
 
 :: --- Unset ------------------------------------------------------------------
 for %%a in (%*) do set "%%a=0"
@@ -46,3 +54,9 @@ set out=
 set msvc=
 set debug=
 set release=
+
+:: --- Warn On No Builds ------------------------------------------------------
+if "%didbuild%"=="" (
+  echo [WARNING] no valid build target specified; must use build target names as arguments to this script, like `build main`.
+  exit /b 1
+)
