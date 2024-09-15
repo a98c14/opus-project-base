@@ -1,3 +1,0 @@
-[submodule "src/opus"]
-	path = src/opus
-	url = https://github.com/a98c14/opus
