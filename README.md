@@ -2,7 +2,7 @@
 
 ## How to setup a new project
 
-Bash
+**Bash**
 ```sh
 project_name='sample-project' \
 && git clone --depth=1 --branch=main https://github.com/a98c14/opus-project-base.git ./$project_name \
@@ -12,18 +12,9 @@ project_name='sample-project' \
 && git init;
 ```
 
-Powershell
+**Powershell**
+Run the following command where you want to create your project.
 ```ps1
-$project_name=Read-Host "Please enter the name of your project."; `
-git clone --depth=1 --branch=main https://github.com/a98c14/opus-project-base.git ./$project_name; `
-cd $project_name; `
-Remove-Item ./.git -Recurse -Force; `
-Clear-Variable project_name; `
-git init;
-cd src; `
-git submodule add https://github.com/a98c14/opus.git; `
-cd ..; `
-New-Item -ItemType Directory -Force -Path ".\dist"; `
-Copy-Item -Path ".\dependencies\*" -Destination ".\dist"; `
-code .;
+Invoke-RestMethod -Uri https://gist.githubusercontent.com/a98c14/93b83508b8cc7f0c9e72d3ca8ff31ad8/raw/3747aaa7bfef1bec1884cb333d6bc6c5a6672830/opus_new_project.ps1 | Invoke-Expression
 ```
+
