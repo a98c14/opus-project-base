@@ -39,9 +39,6 @@ main(void)
 
     /*********************/
     /** APPLICATION CODE */
-    mtag_init();
-    mtag_register_arena(persistent_arena, string("persistent_arena"));
-    mtag_register_arena(frame_arena, string("frame_arena"));
 
     /** setup inputs */
     String action_quit = string("quit");
