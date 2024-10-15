@@ -3,6 +3,9 @@ If:
 CompileFlags:
   Add: [-include=./src/inc.h]
 ---
+Diagnostics:
+  UnusedIncludes: None
+  
 # If:
 #   PathMatch: ^src.*\.h
 # CompileFlags:

@@ -14,7 +14,7 @@ project_name='sample-project' \
 
 Powershell
 ```ps1
-$project_name='memory-tag'; `
+$project_name=Read-Host "Please enter the name of your project."; `
 git clone --depth=1 --branch=main https://github.com/a98c14/opus-project-base.git ./$project_name; `
 cd $project_name; `
 Remove-Item ./.git -Recurse -Force; `
@@ -23,5 +23,7 @@ git init;
 cd src; `
 git submodule add https://github.com/a98c14/opus.git; `
 cd ..; `
+New-Item -ItemType Directory -Force -Path ".\dist"
+Copy-Item -Path ".\dependencies\*" -Destination ".\dist"
 code .;
 ```
