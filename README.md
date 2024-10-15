@@ -15,6 +15,6 @@ project_name='sample-project' \
 **Powershell**
 Run the following command where you want to create your project.
 ```ps1
-Invoke-RestMethod -Uri https://gist.githubusercontent.com/a98c14/93b83508b8cc7f0c9e72d3ca8ff31ad8/raw/3747aaa7bfef1bec1884cb333d6bc6c5a6672830/opus_new_project.ps1 | Invoke-Expression
+Invoke-RestMethod -Uri https://gist.githubusercontent.com/a98c14/93b83508b8cc7f0c9e72d3ca8ff31ad8/raw/b98612bd8a69351777f6089b664b899aaf005788/opus_new_project.ps1 | Invoke-Expression
 ```
 
