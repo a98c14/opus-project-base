@@ -1,5 +1,8 @@
 # Opus Project Base
 
+## TODO
+- Fix having to run the `main.exe` from dist
+
 ## How to setup a new project
 
 **Bash**
