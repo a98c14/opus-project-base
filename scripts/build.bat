@@ -7,16 +7,23 @@ for %%a in (%*) do set "%%a=1"
 if not "%release%"=="1" set debug=1
 if "%debug%"=="1"   set release=0 && echo [debug mode]
 if "%release%"=="1" set debug=0 && echo [release mode]
+if "%rebuild_shaders%"=="1"      echo [rebuilding shaders]
 if "%~1"==""                     echo [default mode, assuming `main` build] && set main=1
 if "%~1"=="release" if "%~2"=="" echo [default mode, assuming `main` build] && set main=1
 
+if "%rebuild_shaders%"=="1" python .\scripts\build_shaders.py --src ".\src\opus\draw\shaders" --out=".\src\opus\draw\draw_shaders.h"
 
 :: --- Unpack Command Line Build Arguments ------------------------------------
-set auto_compile_flags=
+set compile_flags=/DLOG_DEBUG_ENABLED=0
+set deps= ..\lib\freetype.lib ..\lib\glfw3dll.lib ..\lib\gl.obj opengl32.lib user32.lib
 
-set cl_common=   /I..\src\ /nologo /FC /Z7
-set cl_debug=    call cl /Od /Ob1 /DBUILD_DEBUG=1 %cl_common% %auto_compile_flags%
-set cl_release=  call cl /O2 /DBUILD_DEBUG=0 %cl_common% %auto_compile_flags%
+if "%asan%"=="1" set compile_flags=%compile_flags% -fsanitize=address && echo [asan enabled]
+
+:: --- Compile Arguments ------------------------------------------------------
+set cl_warnings= /W4 /WX /wd4201 /wd4456
+set cl_common=   /I..\src\ /I..\src\opus\third_party\ /nologo /FC /Z7 %deps%
+set cl_debug=    call cl /Od /Ob1 /DBUILD_DEBUG=1 %cl_warnings% %cl_common% %compile_flags%
+set cl_release=  call cl /O2 /DBUILD_DEBUG=0 %cl_common% %compile_flags%
 set cl_link=     /link /MANIFEST:EMBED /INCREMENTAL:NO /pdbaltpath:%%%%_PDB%%%%
 set cl_out=      /out:
 
@@ -36,7 +43,7 @@ if not exist dist mkdir dist
 
 :: --- Build Everything (@build_targets) --------------------------------------
 pushd dist
-if "%main%"=="1" set didbuild=1 && %compile% ..\src\main.c %compile_link% %out%main.exe || exit /b 1
+if "%main%"=="1" echo [building main.c] && set didbuild=1 && %compile% ..\src\main.c %compile_link% %out%main.exe || exit /b 1
 popd
 if %didbuild%==1 echo [build succeeded]
 
@@ -54,6 +61,7 @@ set out=
 set msvc=
 set debug=
 set release=
+set deps=
 
 :: --- Warn On No Builds ------------------------------------------------------
 if "%didbuild%"=="" (
