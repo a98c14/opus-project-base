@@ -89,20 +89,9 @@ main(void)
             }
         }
 
-        MTAG_ArenaNode* registered_arena;
-        const float32   line_height = 24;
-        float32         y           = 0;
-        for_each(registered_arena, _mtag_context->registered_arenas.first)
-        {
-            String text = string_pushf(frame_arena, "Pos: %d, Cap: %d, Commit: %d", registered_arena->value.cached_pos, registered_arena->value.cached_cap, registered_arena->value.cached_commit_pos);
-            d_string_at(vec2(0, y), text, slider_value, ColorWhite, AlignmentCenter);
-            y -= line_height - 2;
-        }
-
         ui_update(dt);
         gfx_render(dt);
         os_window_update(window);
-        mtag_refresh();
     }
 
     return 0;
