@@ -1,0 +1,122 @@
+name: build_win64
+
+on:
+  push:
+    branches: 
+      - "main"
+    paths-ignore:
+      - '**.md'
+
+env:
+  version: '0.0'
+  asset_path: './assets'
+  output_path: './<PROJECT_NAME>'
+  output_bin_path: './<PROJECT_NAME>/bin/'
+  output_asset_path: './<PROJECT_NAME>/assets/'
+  exe_path: './<PROJECT_NAME>/<PROJECT_NAME>.exe'
+  dependency_dir: './dependencies'
+  zip_file_name: '<PROJECT_NAME>'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'true'
+        token: ${{ secrets.PAT }}
+
+    - name: Extract metadata
+      shell: bash
+      run: |
+        echo "version=$version.${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+        echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_OUTPUT
+        echo "branchsafe=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's/[/]+/-/g')" >> $GITHUB_OUTPUT
+        echo "repository=$(echo ${GITHUB_REPOSITORY#*/})" >> $GITHUB_OUTPUT
+      id: extract_metadata      
+
+    - name: Extract metadata environment
+      shell: bash
+      run: |
+        echo "isProduction=$(echo 0)" >> $GITHUB_OUTPUT
+        echo "isStaging=$(echo 0)" >> $GITHUB_OUTPUT
+        echo "isTesting=$(echo 0)" >> $GITHUB_OUTPUT
+        echo "isIntegration=$(echo 0)" >> $GITHUB_OUTPUT
+        
+        if [[ "${{ steps.extract_metadata.outputs.branch }}" == "${{ github.event.repository.default_branch }}" ]]
+        then
+              echo "name=$(echo production)" >> $GITHUB_OUTPUT
+              echo "isProduction=$(echo 1)" >> $GITHUB_OUTPUT
+        elif [[ "${{ steps.extract_metadata.outputs.branch }}" == "${{ env.stagingBranch }}" ]]
+        then
+              echo "name=$(echo staging)" >> $GITHUB_OUTPUT
+              echo "isStaging=$(echo 1)" >> $GITHUB_OUTPUT
+              echo "version=$version-preview" >> $GITHUB_ENV
+        elif [[ "${{ steps.extract_metadata.outputs.branch }}" == "${{ env.testingBranch }}" ]] || [[ "${{ github.event.inputs.environment }}" == "testing" ]]
+        then
+              echo "name=$(echo testing)" >> $GITHUB_OUTPUT
+              echo "isTesting=$(echo 1)" >> $GITHUB_OUTPUT
+              echo "version=$version-qa" >> $GITHUB_ENV
+        elif [[ "${{ steps.extract_metadata.outputs.branch }}" == "${{ env.integrationBranch }}" ]]
+        then
+              echo "name=$(echo integration)" >> $GITHUB_OUTPUT
+              echo "isIntegration=$(echo 1)" >> $GITHUB_OUTPUT
+              echo "version=$version-$integrationBranch" >> $GITHUB_ENV
+        else
+              echo "name=$(echo development)" >> $GITHUB_OUTPUT
+              echo "isDevelopment=$(echo 1)" >> $GITHUB_OUTPUT
+              echo "version=$version-dev" >> $GITHUB_ENV
+        fi
+      id: extract_metadata_environment
+
+    - name: Configure build for amd64
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64
+    
+    - name: Build
+      shell: powershell
+      run: |
+        .\scripts\build.bat main release
+       
+    - name: Copy dependencies
+      shell: pwsh
+      run: |
+        New-Item -itemType Directory -Force -Path ${{ env.output_bin_path }}
+        New-Item -itemType Directory -Force -Path ${{ env.output_asset_path }}
+        Move-Item .\dist\*  ${{ env.output_bin_path }}
+        Copy-Item -Path "${{ env.dependency_dir }}/*" -Destination ${{ env.output_bin_path }} -Recurse
+        Copy-Item -Path "${{ env.asset_path }}/*" -Destination ${{ env.output_asset_path }} -Recurse
+        Write-Host "Dependencies copied successfully!"
+
+    - name: Zip output folder
+      shell: pwsh
+      run: |
+        Compress-Archive -Path "${{ env.output_path }}" -DestinationPath "${{ env.zip_file_name }}-${{ env.version }}.zip"
+        Write-Host "Folder compressed successfully!"
+
+    - name: Create tag
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: 'refs/tags/v${{ env.version }}',
+            sha: context.sha
+          })
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ env.version }}
+        name: <PROJECT_NAME>_${{ env.version }}
+        draft: false
+        prerelease: false
+        files: |
+          ${{ env.zip_file_name }}-${{ env.version }}.zip
+        body: |
+          [Changelog](https://github.com/${{github.repository}}/blob/${{ steps.extract_metadata.outputs.branch }}/CHANGELOG.md)
